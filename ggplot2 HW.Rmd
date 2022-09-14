@@ -2,7 +2,8 @@
 title: "ggplot2"
 author: "Trevor Isaacson"
 date: "`r Sys.Date()`"
-output: pdf_document
+output:
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -19,14 +20,16 @@ library(patchwork)
 
 Instructions: Upload graph made with ggplot2 to GitHub. This can be any plot you want but must be done with ggplot2. You can use additional packages for data processing and graphing (e.g. you can use packages that build on ggplot2). Make sure that both the source code and final plot are available. If possible, share the data or the code used to obtain the data from online sources.
 
-
 ```{r}
 # read data
 ncaaf_standings = read.csv("2021_NCAAF_standings.csv")
 
 # rename and remove certain columns
 ncaaf_standings = subset(ncaaf_standings, select = -c(Polls, X.9, X.10, X.11))
-colnames(ncaaf_standings) = c("Rank", "School", "Conference", "Overall_Wins", "Overall_Loses", "Overall_WinPerc", "Conf_Wins", "Conf_Loses", "Conf_WinPerc", "Off_PPG", "Def_PPG", "SRS", "SOS")
+colnames(ncaaf_standings) = c("Rank", "School", "Conference", "Overall_Wins", 
+                              "Overall_Loses", "Overall_WinPerc", "Conf_Wins", 
+                              "Conf_Loses", "Conf_WinPerc", "Off_PPG", 
+                              "Def_PPG", "SRS", "SOS")
 
 # remove first row b/c it isn't a school
 ncaaf_standings = ncaaf_standings[-c(1), ]
@@ -54,7 +57,7 @@ ncaaf_standings = ncaaf_standings %>%
   mutate(Conference = sub(".(Mountain).*", "", Conference)) %>%
   mutate(Conference = sub(".(Coastal).*", "", Conference))
 
-ncaaf_standings
+head(ncaaf_standings)
 ```
 
 
@@ -78,14 +81,34 @@ offense = offense +
   ggrepel::geom_label_repel(data = . %>% filter(School == "Colorado State"),
                     aes(label = "CSU"), 
                     color = "darkgreen", show.legend = FALSE, fill = alpha(c("white"), 0),
-                    nudge_y = 0.05, nudge_x = 2.75)
-
-
+                    nudge_y = 0.05, nudge_x = 3.5)
 
 offense
 ```
 
+```{r}
+defense = ggplot(data = ncaaf_standings, 
+                  aes(x = Def_PPG, y = Overall_WinPerc, color = Conference)) +
+  theme_minimal() + 
+  geom_point() + 
+  scale_color_viridis(discrete = TRUE) + 
+  xlab("Points Allowed per Game") + ylab("Win Percentage") +
+  xlim(10, 50) + ylim(0, 1) +
+  plot_annotation(
+    title = "Average Number of Points Allowed and Overall Win Percentage",
+    subtitle = "Comparing the average number of points allowed for each FBS football team and 
+        their overall win percentage for the 2021 season",
+    caption = "Data from Sports Reference"
+  )
 
+defense = defense +
+  ggrepel::geom_label_repel(data = . %>% filter(School == "Colorado State"),
+                    aes(label = "CSU"), 
+                    color = "darkgreen", show.legend = FALSE, fill = alpha(c("white"), 0),
+                    nudge_y = -0.1)
+
+defense
+```
 
 
 
