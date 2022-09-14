@@ -1,5 +1,5 @@
 ---
-title: "ggplot2"
+title: "ggplot2 Assignment"
 author: "Trevor Isaacson"
 date: "`r Sys.Date()`"
 output:
