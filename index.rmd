@@ -3,7 +3,7 @@ title: "ggplot2 Assignment"
 author: "Trevor Isaacson"
 date: "`r Sys.Date()`"
 output:
-  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -20,7 +20,7 @@ library(patchwork)
 
 Instructions: Upload graph made with ggplot2 to GitHub. This can be any plot you want but must be done with ggplot2. You can use additional packages for data processing and graphing (e.g. you can use packages that build on ggplot2). Make sure that both the source code and final plot are available. If possible, share the data or the code used to obtain the data from online sources.
 
-```{r}
+```{r echo = FALSE}
 # read data
 ncaaf_standings = read.csv("2021_NCAAF_standings.csv")
 
@@ -56,7 +56,9 @@ ncaaf_standings = ncaaf_standings %>%
   mutate(Conference = sub(".(North).*", "", Conference)) %>%
   mutate(Conference = sub(".(Mountain).*", "", Conference)) %>%
   mutate(Conference = sub(".(Coastal).*", "", Conference))
+```
 
+```{r}
 head(ncaaf_standings)
 ```
 
