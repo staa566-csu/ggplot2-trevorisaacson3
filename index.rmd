@@ -16,9 +16,8 @@ library(ggthemes)
 library(scales)
 library(gghighlight)
 library(patchwork)
+library(gridExtra)
 ```
-
-Instructions: Upload graph made with ggplot2 to GitHub. This can be any plot you want but must be done with ggplot2. You can use additional packages for data processing and graphing (e.g. you can use packages that build on ggplot2). Make sure that both the source code and final plot are available. If possible, share the data or the code used to obtain the data from online sources.
 
 ```{r echo = FALSE}
 # read data
@@ -56,13 +55,17 @@ ncaaf_standings = ncaaf_standings %>%
   mutate(Conference = sub(".(North).*", "", Conference)) %>%
   mutate(Conference = sub(".(Mountain).*", "", Conference)) %>%
   mutate(Conference = sub(".(Coastal).*", "", Conference))
+
+ncaaf_standings = ncaaf_standings %>%
+  mutate(Bowl = ifelse(Overall_Wins >= 6, TRUE, FALSE))
 ```
+
+
+The data used for this assignment is data from the 2021 College Football season and provides an general statistics about each team.  Statistics include win percentages, offensive points per game, defensive points per game, strength of schedule and a rating based on schedule and margin of victory. The data was collected from sports-reference.com and has data for each team and season.  For this assignment, I used data strictly from the 2021-22 season.          
 
 ```{r}
 head(ncaaf_standings)
 ```
-
-
 
 ```{r}
 offense = ggplot(data = ncaaf_standings, 
@@ -75,11 +78,9 @@ offense = ggplot(data = ncaaf_standings,
   plot_annotation(
     title = "Average Number of Points Scored and Overall Win Percentage",
     subtitle = "Comparing the average number of points scored for each FBS football team and 
-        their overall win percentage for the 2021 season",
+        their overall win percentage for the 2021-22 season",
     caption = "Data from Sports Reference"
-  )
-
-offense = offense +
+  ) +
   ggrepel::geom_label_repel(data = . %>% filter(School == "Colorado State"),
                     aes(label = "CSU"), 
                     color = "darkgreen", show.legend = FALSE, fill = alpha(c("white"), 0),
@@ -101,9 +102,7 @@ defense = ggplot(data = ncaaf_standings,
     subtitle = "Comparing the average number of points allowed for each FBS football team and 
         their overall win percentage for the 2021 season",
     caption = "Data from Sports Reference"
-  )
-
-defense = defense +
+  ) +
   ggrepel::geom_label_repel(data = . %>% filter(School == "Colorado State"),
                     aes(label = "CSU"), 
                     color = "darkgreen", show.legend = FALSE, fill = alpha(c("white"), 0),
@@ -116,32 +115,40 @@ defense
 
 
 
-```{r}
-ncaaf_offense = ggplot(data = ncaaf_standings, 
-                  aes(x = Off_PPG, y = Overall_WinPerc, color = Conference)) +
+```{r warning = FALSE}
+ncaaf = ggplot(data = ncaaf_standings, 
+                  aes(x = Off_PPG, y = Def_PPG, color = Conference)) +
   theme_minimal() + 
   geom_point() + 
-  xlab("Points Scored per Game") + ylab("Win Percentage") +
-  theme(legend.position = "none") +
+  xlab("Points Scored per Game") + ylab("Points Allowed Per Game") +
   scale_color_viridis(discrete = TRUE) +
-  xlim(10, 50) + ylim(0, 1)
-
-ncaaf_defense = ggplot(data = ncaaf_standings) +
-  theme_minimal() + 
-  geom_point(aes(x = Def_PPG, y = Overall_WinPerc, color = Conference)) +
-  scale_color_viridis(discrete = TRUE) +
-  xlab("Points Allowed per Game") + ylab("") +
-  xlim(10, 50) + ylim(0, 1)
-
-
-ncaaf = ncaaf_offense + ncaaf_defense
-ncaaf = ncaaf + 
+  xlim(10, 50) + ylim(5, 50) +
+  theme(legend.position = "right") +
+  ggrepel::geom_label_repel(data = . %>% filter(School == "Alabama"),
+                    aes(label = "Alabama"), 
+                    color = "red", show.legend = FALSE, fill = alpha(c("white"), 0),
+                    nudge_x = 5,) +
+  ggrepel::geom_label_repel(data = . %>% filter(School == "Cincinnati"),
+                    aes(label = "Cincinnati"), 
+                    color = "grey10", show.legend = FALSE, fill = alpha(c("white"), 0),
+                    nudge_x = 0, nudge_y = -4) +
+  ggrepel::geom_label_repel(data = . %>% filter(School == "Georgia"),
+                    aes(label = "Georgia"), 
+                    color = "black", show.legend = FALSE, fill = alpha(c("white"), 0),
+                    nudge_y = -1, nudge_x = 5) +
+  ggrepel::geom_label_repel(data = . %>% filter(School == "Michigan"),
+                    aes(label = "Michigan"), 
+                    color = "blue", show.legend = FALSE, fill = alpha(c("white"), 0),
+                    nudge_y = -2, nudge_x = -5) +
   plot_annotation(
-    title = "",
-    subtitle = "",
+    title = "Average Points Scored vs Points Allowed for 2021-22 Season",
+    subtitle = "The four teams labeled played in the 2022 College Football Playoff 
+    and were considered the best four teams in college football.  Georgia defeated 
+    Alabama in the championship game.",
     caption = "Data from Sports Reference"
   )
-  
+
 ncaaf
 ```
+
 
