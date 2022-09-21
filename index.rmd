@@ -1,0 +1,173 @@
+---
+title: "ggplot2 Assignment"
+author: "Trevor Isaacson"
+date: "`r Sys.Date()`"
+output:
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(tidyverse)
+library(ggrepel)
+library(viridis)
+library(ggthemes)
+library(scales)
+library(gghighlight)
+library(patchwork)
+library(gridExtra)
+```
+
+```{r echo = FALSE}
+# read data
+ncaaf_standings = read.csv("2021_NCAAF_standings.csv")
+
+# rename and remove certain columns
+ncaaf_standings = subset(ncaaf_standings, select = -c(Polls, X.9, X.10, X.11))
+colnames(ncaaf_standings) = c("Rank", "School", "Conference", "Overall_Wins", 
+                              "Overall_Loses", "Overall_WinPerc", "Conf_Wins", 
+                              "Conf_Loses", "Conf_WinPerc", "Off_PPG", 
+                              "Def_PPG", "SRS", "SOS")
+
+# remove first row b/c it isn't a school
+ncaaf_standings = ncaaf_standings[-c(1), ]
+
+# change variables types from chr to double 
+ncaaf_standings = ncaaf_standings %>% 
+  mutate(Overall_Wins = as.numeric(Overall_Wins)) %>%
+  mutate(Overall_Loses = as.numeric(Overall_Loses)) %>%
+  mutate(Overall_WinPerc = as.numeric(Overall_WinPerc)) %>%
+  mutate(Conf_Wins = as.numeric(Conf_Wins)) %>%
+  mutate(Conf_Loses = as.numeric(Conf_Loses)) %>%
+  mutate(Conf_WinPerc = as.numeric(Conf_WinPerc)) %>%
+  mutate(Off_PPG = as.numeric(Off_PPG)) %>%
+  mutate(Def_PPG = as.numeric(Def_PPG)) %>%
+  mutate(SRS = as.numeric(SRS)) %>%
+  mutate(SOS = as.numeric(SOS))
+
+# remove conference divisions
+ncaaf_standings = ncaaf_standings %>%
+  mutate(Conference = sub(".(East).*", "", Conference)) %>%
+  mutate(Conference = sub(".(West).*", "", Conference)) %>%
+  mutate(Conference = sub(".(Atlantic).*", "", Conference)) %>%
+  mutate(Conference = sub(".(South).*", "", Conference)) %>%
+  mutate(Conference = sub(".(North).*", "", Conference)) %>%
+  mutate(Conference = sub(".(Mountain).*", "", Conference)) %>%
+  mutate(Conference = sub(".(Coastal).*", "", Conference))
+
+ncaaf_standings = ncaaf_standings %>%
+  mutate(Bowl = ifelse(Overall_Wins >= 6, TRUE, FALSE))
+```
+
+
+The data used for this assignment is data from the 2021 College Football season and provides an general statistics about each team.  Statistics include win percentages, offensive points per game, defensive points per game, strength of schedule and a rating based on schedule and margin of victory. The data was collected from sports-reference.com and has data for each team and season.  For this assignment, I used data strictly from the 2021-22 season.          
+
+```{r}
+head(ncaaf_standings)
+```
+
+```{r}
+offense = ggplot(data = ncaaf_standings, 
+                  aes(x = Off_PPG, y = Overall_WinPerc, color = Conference)) +
+  theme_minimal() + 
+  geom_point() + 
+  scale_color_viridis(discrete = TRUE) + 
+  xlab("Points Scored per Game") + ylab("Win Percentage") +
+  xlim(10, 50) + ylim(0, 1) +
+  plot_annotation(
+    title = "Average Number of Points Scored and Overall Win Percentage",
+    subtitle = "Comparing the average number of points scored for each FBS football team and 
+        their overall win percentage for the 2021-22 season",
+    caption = "Data from Sports Reference"
+  ) +
+  ggrepel::geom_label_repel(data = . %>% filter(School == "Colorado State"),
+                    aes(label = "CSU"), 
+                    color = "darkgreen", show.legend = FALSE, fill = alpha(c("white"), 0),
+                    nudge_y = 0.05, nudge_x = 3.5)
+
+offense
+```
+
+```{r}
+defense = ggplot(data = ncaaf_standings, 
+                  aes(x = Def_PPG, y = Overall_WinPerc, color = Conference)) +
+  theme_minimal() + 
+  geom_point() + 
+  scale_color_viridis(discrete = TRUE) + 
+  xlab("Points Allowed per Game") + ylab("Win Percentage") +
+  xlim(10, 50) + ylim(0, 1) +
+  plot_annotation(
+    title = "Average Number of Points Allowed and Overall Win Percentage",
+    subtitle = "Comparing the average number of points allowed for each FBS football team and 
+        their overall win percentage for the 2021 season",
+    caption = "Data from Sports Reference"
+  ) +
+  ggrepel::geom_label_repel(data = . %>% filter(School == "Colorado State"),
+                    aes(label = "CSU"), 
+                    color = "darkgreen", show.legend = FALSE, fill = alpha(c("white"), 0),
+                    nudge_y = -0.1)
+
+defense
+```
+
+
+
+
+
+```{r warning = FALSE}
+ncaaf = ggplot(data = ncaaf_standings, 
+                  aes(x = Off_PPG, y = Def_PPG, color = Conference)) +
+  theme_minimal() + 
+  geom_point() + 
+  xlab("Points Scored per Game") + ylab("Points Allowed Per Game") +
+  scale_color_viridis(discrete = TRUE) +
+  xlim(10, 50) + ylim(5, 50) +
+  theme(legend.position = "right") +
+  ggrepel::geom_label_repel(data = . %>% filter(School == "Alabama"),
+                    aes(label = "Alabama"), 
+                    color = "red", show.legend = FALSE, fill = alpha(c("white"), 0),
+                    nudge_x = 5,) +
+  ggrepel::geom_label_repel(data = . %>% filter(School == "Cincinnati"),
+                    aes(label = "Cincinnati"), 
+                    color = "grey10", show.legend = FALSE, fill = alpha(c("white"), 0),
+                    nudge_x = 0, nudge_y = -4) +
+  ggrepel::geom_label_repel(data = . %>% filter(School == "Georgia"),
+                    aes(label = "Georgia"), 
+                    color = "black", show.legend = FALSE, fill = alpha(c("white"), 0),
+                    nudge_y = -1, nudge_x = 5) +
+  ggrepel::geom_label_repel(data = . %>% filter(School == "Michigan"),
+                    aes(label = "Michigan"), 
+                    color = "blue", show.legend = FALSE, fill = alpha(c("white"), 0),
+                    nudge_y = -2, nudge_x = -5) +
+  plot_annotation(
+    title = "Average Points Scored vs Points Allowed for 2021-22 Season",
+    subtitle = "The four teams labeled played in the 2022 College Football Playoff 
+    and were considered the best four teams in college football.  Georgia defeated 
+    Alabama in the championship game.",
+    caption = "Data from Sports Reference"
+  )
+
+ncaaf
+```
+
+```{r message = FALSE, warning = FALSE}
+ncaaf1 = ggplot(data = ncaaf_standings, 
+                  aes(x = Off_PPG, y = Def_PPG, color = Bowl)) +
+  theme_minimal() + 
+  geom_point() + 
+  facet_wrap(. ~ Conference) +
+  guides(color=guide_legend(title="Bowl Game?")) +
+  xlab("Points Scored per Game") + ylab("Points Allowed Per Game") +
+  scale_color_viridis(discrete = TRUE) +
+  xlim(10, 50) + ylim(5, 50) +
+  plot_annotation(
+    title = "Average Points Scored vs Points Allowed for 2021-22 Season",
+    subtitle = "",
+    caption = "Data from Sports Reference"
+  )
+
+
+ncaaf1
+```
+
